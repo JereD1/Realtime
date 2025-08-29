@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/app/lib/superbase';
+import MatchStatsModal from './MatchStatsModal'; // Import the modal component
 
 // --- Type Definitions ---
 type TeamRef = {
@@ -18,11 +19,17 @@ type Match = {
   tournament_id: number;
   team1_id: number;
   team2_id: number;
+  team1_score: number;
+  team2_score: number;
   match_date: string | null;
   map_name?: string;
   game_mode?: string;
   round?: string;
   status: string;
+  series_type: string;
+  series_score_team1: number;
+  series_score_team2: number;
+  winner_team_id?: number;
   team1?: TeamRef;
   team2?: TeamRef;
   tournaments?: TournamentRef;
@@ -47,6 +54,8 @@ const MatchManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [error, setError] = useState<string>('');
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
   const [form, setForm] = useState({
     tournament_id: '',
@@ -57,7 +66,22 @@ const MatchManagement: React.FC = () => {
     game_mode: '',
     round: '',
     status: 'scheduled',
+    series_type: 'bo3',
   });
+
+  const seriesTypes = [
+    { value: 'bo3', label: 'Best of 3', maps: 3 },
+    { value: 'bo5', label: 'Best of 5', maps: 5 },
+    { value: 'bo7', label: 'Best of 7', maps: 7 },
+  ];
+
+  const getGameModes = (seriesType: string) => {
+    const modes = ['Hardpoint', 'Search and Destroy', 'Control'];
+    if (seriesType === 'bo3') return modes; // HP, SND, Control
+    if (seriesType === 'bo5') return [...modes, 'Hardpoint', 'Search and Destroy']; // HP, SND, Control, HP, SND
+    if (seriesType === 'bo7') return [...modes, 'Hardpoint', 'Search and Destroy', 'Control', 'Hardpoint']; // Full rotation
+    return modes;
+  };
 
   useEffect(() => {
     fetchMatches();
@@ -127,8 +151,7 @@ const MatchManagement: React.FC = () => {
   };
 
   // --- Handle Submit ---
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setIsLoading(true);
     setError('');
 
@@ -141,6 +164,8 @@ const MatchManagement: React.FC = () => {
         match_date: form.match_date
           ? new Date(form.match_date).toISOString()
           : null,
+        series_score_team1: 0,
+        series_score_team2: 0,
       };
 
       if (editingMatch) {
@@ -170,6 +195,7 @@ const MatchManagement: React.FC = () => {
         game_mode: '',
         round: '',
         status: 'scheduled',
+        series_type: 'bo3',
       });
       setEditingMatch(null);
       await fetchMatches();
@@ -195,6 +221,7 @@ const MatchManagement: React.FC = () => {
       game_mode: match.game_mode || '',
       round: match.round || '',
       status: match.status,
+      series_type: match.series_type || 'bo3',
     });
   };
 
@@ -226,8 +253,39 @@ const MatchManagement: React.FC = () => {
       game_mode: '',
       round: '',
       status: 'scheduled',
+      series_type: 'bo1',
     });
     setEditingMatch(null);
+  };
+
+  const getSeriesProgress = (match: Match) => {
+    if (match.series_type === 'bo1') return null;
+    
+    const maxMaps = parseInt(match.series_type.slice(2));
+    const mapsToWin = Math.ceil(maxMaps / 2);
+    
+    return {
+      mapsToWin,
+      totalMaps: maxMaps,
+    };
+  };
+
+  const canManageStats = (match: Match) => {
+    return match.series_type !== 'bo1' && 
+           (match.status === 'live' || match.status === 'completed');
+  };
+
+  // Handle opening stats modal
+  const handleOpenStatsModal = (match: Match) => {
+    setSelectedMatch(match);
+    setStatsModalOpen(true);
+  };
+
+  // Handle closing stats modal and refresh matches
+  const handleCloseStatsModal = () => {
+    setStatsModalOpen(false);
+    setSelectedMatch(null);
+    fetchMatches(); // Refresh matches to show updated scores
   };
 
   return (
@@ -245,7 +303,7 @@ const MatchManagement: React.FC = () => {
           {editingMatch ? 'Edit Match' : 'Create Match'}
         </h2>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Tournament *</label>
             <select
@@ -258,6 +316,22 @@ const MatchManagement: React.FC = () => {
               {tournaments.map((tournament) => (
                 <option key={tournament.id} value={tournament.id}>
                   {tournament.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Series Type *</label>
+            <select
+              required
+              value={form.series_type}
+              onChange={(e) => setForm({ ...form, series_type: e.target.value })}
+              className="w-full p-2 border rounded-md"
+            >
+              {seriesTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
             </select>
@@ -308,28 +382,6 @@ const MatchManagement: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Map Name</label>
-            <input
-              type="text"
-              value={form.map_name}
-              onChange={(e) => setForm({ ...form, map_name: e.target.value })}
-              className="w-full p-2 border rounded-md"
-              placeholder="e.g., Nuketown"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Game Mode</label>
-            <input
-              type="text"
-              value={form.game_mode}
-              onChange={(e) => setForm({ ...form, game_mode: e.target.value })}
-              className="w-full p-2 border rounded-md"
-              placeholder="e.g., Team Deathmatch"
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium mb-2">Round</label>
             <input
               type="text"
@@ -354,9 +406,10 @@ const MatchManagement: React.FC = () => {
             </select>
           </div>
 
-          <div className="md:col-span-2 flex gap-2">
+          <div className="lg:col-span-3 flex gap-2">
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={isLoading}
               className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50"
             >
@@ -373,8 +426,24 @@ const MatchManagement: React.FC = () => {
               </button>
             )}
           </div>
-        </form>
+        </div>
       </div>
+
+      {/* Series Game Mode Preview */}
+      {form.series_type !== 'bo1' && (
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="text-lg font-semibold mb-2">
+            {seriesTypes.find(t => t.value === form.series_type)?.label} Game Mode Order:
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {getGameModes(form.series_type).map((mode, index) => (
+              <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                Map {index + 1}: {mode}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Matches List */}
       <div className="bg-white p-6 rounded-lg shadow">
@@ -385,70 +454,110 @@ const MatchManagement: React.FC = () => {
               <tr className="bg-gray-50">
                 <th className="px-4 py-2 text-left">Tournament</th>
                 <th className="px-4 py-2 text-left">Teams</th>
+                <th className="px-4 py-2 text-left">Series</th>
+                <th className="px-4 py-2 text-left">Score</th>
                 <th className="px-4 py-2 text-left">Date</th>
-                <th className="px-4 py-2 text-left">Details</th>
+                <th className="px-4 py-2 text-left">Round</th>
                 <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Actions</th>
+                <th className="px-4 py-2 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
-              {matches.map((match) => (
-                <tr key={match.id} className="border-t">
-                  <td className="px-4 py-2">
-                    {match.tournaments?.name || 'N/A'}
-                  </td>
-                  <td className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <span>{match.team1?.name || 'TBD'}</span>
-                      <span className="text-gray-500">vs</span>
-                      <span>{match.team2?.name || 'TBD'}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2">
-                    {match.match_date 
-                      ? new Date(match.match_date).toLocaleString()
-                      : 'TBD'
-                    }
-                  </td>
-                  <td className="px-4 py-2">
-                    <div className="text-sm">
-                      {match.map_name && <div>Map: {match.map_name}</div>}
-                      {match.game_mode && <div>Mode: {match.game_mode}</div>}
-                      {match.round && <div>Round: {match.round}</div>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-2">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      match.status === 'live' ? 'bg-red-100 text-red-800' :
-                      match.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      match.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {match.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(match)}
-                        className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(match.id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {matches.map((match) => {
+                const seriesProgress = getSeriesProgress(match);
+                return (
+                  <tr key={match.id} className="border-t">
+                    <td className="px-4 py-2">
+                      {match.tournaments?.name || 'N/A'}
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className={match.winner_team_id === match.team1_id ? 'font-bold text-green-600' : ''}>
+                          {match.team1?.name || 'TBD'}
+                        </span>
+                        <span className="text-gray-500">vs</span>
+                        <span className={match.winner_team_id === match.team2_id ? 'font-bold text-green-600' : ''}>
+                          {match.team2?.name || 'TBD'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="text-sm font-medium">
+                        {match.series_type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="text-sm font-semibold">
+                        {match.series_score_team1 || 0} - {match.series_score_team2 || 0}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 text-sm">
+                      {match.match_date 
+                        ? new Date(match.match_date).toLocaleString()
+                        : 'TBD'
+                      }
+                    </td>
+                    <td className="px-4 py-2 text-sm">
+                      {match.round || 'N/A'}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        match.status === 'live' ? 'bg-red-100 text-red-800' :
+                        match.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        match.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {match.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleEdit(match)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600"
+                        >
+                          Edit
+                        </button>
+                        
+                        {canManageStats(match) && (
+                          <button
+                            onClick={() => handleOpenStatsModal(match)}
+                            className="bg-green-500 text-white px-2 py-1 rounded text-sm hover:bg-green-600"
+                          >
+                            Add Match Stats
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={() => handleDelete(match.id)}
+                          className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+
+        {matches.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No matches found. Create your first match above.
+          </div>
+        )}
       </div>
+
+      {/* Match Stats Modal */}
+      {selectedMatch && (
+        <MatchStatsModal
+          isOpen={statsModalOpen}
+          onClose={handleCloseStatsModal}
+          match={selectedMatch}
+        />
+      )}
     </div>
   );
 };
