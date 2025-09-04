@@ -82,11 +82,12 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
+       
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-gray-800">
           <div className="text-gray-400 text-sm mb-4 md:mb-0">
             © {currentYear} RealTime Esports. All rights reserved.
           </div>
+           {/* Bottom Bar 
           <div className="flex items-center space-x-6 text-sm">
             <button className="text-gray-400 hover:text-purple-400 transition-colors duration-200">
               Privacy Policy
@@ -98,7 +99,9 @@ const Footer = () => {
               Cookies
             </button>
           </div>
+          */}
         </div>
+        
       </div>
     </footer>
   );
