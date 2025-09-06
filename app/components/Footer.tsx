@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="flex items-center justify-between">
           {/* RealTime Brand */}
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-[#4142f3] to-[#101043] hover:from-[#3535b3] hover:to-[#1c1c80] rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-lg">RT</span>
             </div>
             <span className="text-white text-lg font-semibold">RealTime</span>

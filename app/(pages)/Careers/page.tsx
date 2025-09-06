@@ -1,9 +1,14 @@
 import React from 'react'
+import Nav from '../../components/Nav'
+import Footer from '../../components/Footer'
+import ApplyCareer from '../../components/ApplyCareers'
 
 const page = () => {
   return (
-    <div>
-      about page
+    <div className='bg-black'>
+      <Nav />
+      <ApplyCareer />
+      <Footer />
     </div>
   )
 }

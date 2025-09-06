@@ -10,7 +10,7 @@ const Navigation = () => {
     { name: 'Home', path: '/' },
     { name: 'Careers', path: '/Careers' },
     { name: 'Our Work', path: '/Our-work' },
-    { name: 'Pricing', path: '/' },
+    { name: 'Pricing', path: '/Pricing' },
     { name: 'Tournaments', path: '/Tournaments' },
   ];
 
@@ -21,7 +21,7 @@ const Navigation = () => {
         <div className="hidden md:flex items-center justify-between bg-[#131313] backdrop-blur-sm rounded-2xl px-8 py-4 border border-gray-700/50">
           {/* Logo */}
           <div className="flex items-center">
-            <div className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#4142f3] to-[#101043] hover:from-[#3535b3] hover:to-[#1c1c80] text-white rounded-full flex items-center justify-center">
               <span className="font-bold">RT</span>
             </div>
           </div>
@@ -43,9 +43,11 @@ const Navigation = () => {
           </div>
 
           {/* Contact Button */}
-          <button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
+          
+          <button className="bg-gradient-to-r from-[#4142f3] to-[#101043] hover:from-[#3535b3] hover:to-[#1c1c80] text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
             Contact Us
           </button>
+        
         </div>
 
         {/* Mobile Header */}
@@ -111,8 +113,8 @@ const Navigation = () => {
                 setActiveItem(name);
                 setMobileMenuOpen(false);
               }}
-              className={`text-white text-xl font-medium hover:text-purple-400 transition-colors duration-200 ${
-                activeItem === name ? 'text-purple-400' : ''
+              className={`text-white text-xl font-medium hover:text-blue-600 transition-colors duration-200 ${
+                activeItem === name ? 'text-blue-700' : ''
               }`}
             >
               {name}
@@ -120,7 +122,7 @@ const Navigation = () => {
           ))}
 
           {/* Contact Button */}
-          <button className="mt-6 w-48 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105">
+          <button className="mt-6 w-48 bg-gradient-to-r from-[#4142f3] to-[#101043] hover:from-[#3535b3] hover:to-[#4142f3] text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105">
             Contact Us
           </button>
         </div>

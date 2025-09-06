@@ -1,5 +1,4 @@
-'use client';
-import { useState } from 'react';
+import React from 'react';
 
 const ServicesSection = () => {
   const services = [
@@ -22,7 +21,7 @@ const ServicesSection = () => {
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 ">
             {services.map((service, index) => (
               <div
                 key={service.title}

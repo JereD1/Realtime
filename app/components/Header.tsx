@@ -1,9 +1,9 @@
-'use client';
-import { useRouter } from "next/navigation";
+
+import Link from "next/link";
 
 const Header = () => {
 
-  const router = useRouter();
+  
 
   return (
     <header className="min-h-screen bg-black flex items-center justify-center px-6">
@@ -11,7 +11,7 @@ const Header = () => {
         <div className="text-white">
           {/* Brand Badge */}
           <div className="inline-flex items-center bg-[#1a1a1a] border border-[#333] rounded-full px-4 py-2 mb-6">
-            <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+            <div className="w-3 h-3 bg-[#4142f3] rounded-full mr-3"></div>
             <span className="text-gray-300 text-sm font-medium">RealTime Production</span>
           </div>
           
@@ -27,9 +27,11 @@ const Header = () => {
               production services
             </p>
             
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors duration-200 mt-8">
+            <Link href="/Contact">
+            <button className="bg-[#4142f3] hover:bg-[#4142f3] text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors duration-200 mt-8">
               Contact us
             </button>
+            </Link>
           </div>
         </div>
       </div>

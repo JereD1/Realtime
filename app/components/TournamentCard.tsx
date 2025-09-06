@@ -17,7 +17,7 @@ const TournamentCard = () => {
             Get Custom Tournament Page built for your tournament, track matches and stayed informed
           </p>
           
-          <button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors duration-200">
+          <button className="bg-gradient-to-r from-[#4142f3] to-[#101043] hover:from-[#3535b3] hover:to-[#1c1c80] text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors duration-200">
             Contact us
           </button>
         </div>

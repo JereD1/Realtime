@@ -66,7 +66,7 @@ export default function MagicLinkAuth({ onSuccess, onError, loading, setLoading 
       <button
         onClick={handleMagicLink}
         disabled={loading}
-        className="w-full bg-purple-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
+        className="w-full  bg-gradient-to-r from-[#3030b5] to-[#101043]  text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
       >
         {loading ? 'Sending...' : 'Send Magic Link'}
       </button>
